@@ -1,5 +1,5 @@
 <package>
-  <description brief="ORB_SLAM">
+  <description brief="orb_slam">
 
      ORB_SLAM
 
@@ -9,7 +9,7 @@
   <depend package="roscpp"/>
   <depend package="tf"/>
   <depend package="sensor_msgs"/>
-  <depend package="opencv2"/>
+  <!-- <depend package="opencv2"/> -->
   <depend package="image_transport"/>
   <depend package="cv_bridge"/>
 
