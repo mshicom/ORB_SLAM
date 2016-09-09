@@ -40,9 +40,9 @@ public:
     ~ORBextractor(){}
 
     // Compute the ORB features and descriptors on an image
-    void operator()( cv::InputArray image, cv::InputArray mask,
+    void extract(cv::Mat &image, cv::Mat &mask,
       std::vector<cv::KeyPoint>& keypoints,
-      cv::OutputArray descriptors);
+      cv::Mat &descriptors);
 
     int inline GetLevels(){
         return nlevels;}

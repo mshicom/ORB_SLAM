@@ -54,7 +54,7 @@
 *
 *********************************************************************/
 
-#include <opencv2/opencv.hpp>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <vector>
@@ -715,13 +715,11 @@ static void computeDescriptors(const Mat& image, vector<KeyPoint>& keypoints, Ma
         computeOrbDescriptor(keypoints[i], image, &pattern[0], descriptors.ptr((int)i));
 }
 
-void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPoint>& _keypoints,
-                      OutputArray _descriptors)
+void ORBextractor::extract(Mat& image, Mat& mask, vector<KeyPoint>& _keypoints,
+                      Mat& descriptors)
 { 
-    if(_image.empty())
+    if(image.empty())
         return;
-
-    Mat image = _image.getMat(), mask = _mask.getMat();
     assert(image.type() == CV_8UC1 );
 
     // Pre-compute the scale pyramids
@@ -730,17 +728,14 @@ void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
     vector < vector<KeyPoint> > allKeypoints;
     ComputeKeyPoints(allKeypoints);
 
-    Mat descriptors;
-
     int nkeypoints = 0;
     for (int level = 0; level < nlevels; ++level)
         nkeypoints += (int)allKeypoints[level].size();
     if( nkeypoints == 0 )
-        _descriptors.release();
+        descriptors.release();
     else
     {
-        _descriptors.create(nkeypoints, 32, CV_8U);
-        descriptors = _descriptors.getMat();
+        descriptors.create(nkeypoints, 32, CV_8U);
     }
 
     _keypoints.clear();

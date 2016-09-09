@@ -58,7 +58,8 @@ Frame::Frame(cv::Mat &im_, const double &timeStamp, ORBextractor* extractor, ORB
     :mpORBvocabulary(voc),mpORBextractor(extractor), im(im_),mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone())
 {
     // Exctract ORB  
-    (*mpORBextractor)(im,cv::Mat(),mvKeys,mDescriptors);
+    cv::Mat mask;
+    mpORBextractor->extract(im,mask,mvKeys,mDescriptors);
 
     N = mvKeys.size();
     LOG(INFO)<< "Exctracted "<< N <<" ORB feature.";
