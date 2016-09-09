@@ -31,6 +31,7 @@
 
 #include<stdint-gcc.h>
 
+#include <glog/logging.h>
 
 using namespace std;
 

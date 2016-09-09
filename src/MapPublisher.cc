@@ -22,6 +22,10 @@
 #include "MapPoint.h"
 #include "KeyFrame.h"
 
+#include <orb_slam/KeyFrameInfo.h>
+#include <cv_bridge/cv_bridge.h>
+#include "Converter.h"
+#include <iostream>
 namespace ORB_SLAM
 {
 
@@ -114,6 +118,9 @@ MapPublisher::MapPublisher(Map* pMap):mpMap(pMap), mbCameraUpdated(false)
     publisher.publish(mCovisibilityGraph);
     publisher.publish(mKeyFrames);
     publisher.publish(mCurrentCamera);
+
+    kf_publisher = nh.advertise<orb_slam::KeyFrameInfo>("ORB_SLAM/KeyFrames", 10);
+
 }
 
 void MapPublisher::Refresh()
@@ -288,6 +295,50 @@ void MapPublisher::PublishKeyFrames(const vector<KeyFrame*> &vpKFs)
     publisher.publish(mCovisibilityGraph);
     publisher.publish(mMST);
 }
+
+void MapPublisher::PublishCurrentKeyFramePairs(KeyFrame *ReferenceKF, KeyFrame *CurrentKF)
+{
+    //static ofstream dump("/tmp/dump.txt", std::ofstream::trunc);
+    if (ReferenceKF->isBad())
+        return;
+
+    vector<KeyFrame *> KFs;
+    KFs.push_back(ReferenceKF);
+    KFs.push_back(CurrentKF);
+
+    mKeyFrameInfoMsg.Images.resize(KFs.size());
+    mKeyFrameInfoMsg.Poses.clear();
+
+    for(size_t i=0, iend=KFs.size() ;i<iend; i++)
+    {
+        KeyFrame *pKF = KFs[i];
+        cv_bridge::CvImage rosImage;
+        rosImage.image = pKF->GetImage();
+        rosImage.header.stamp = ros::Time(pKF->mTimeStamp);
+        rosImage.header.seq = pKF->mnFrameId;
+        rosImage.encoding =  "MONO8";
+        rosImage.toImageMsg(mKeyFrameInfoMsg.Images[i]);
+
+        cv::Mat R = pKF->GetRotation().t();
+        vector<float> q = ORB_SLAM::Converter::toQuaternion(R);
+        cv::Mat t = pKF->GetCameraCenter();
+
+        geometry_msgs::Pose p;
+        p.position.x = t.at<float>(0);
+        p.position.y = t.at<float>(1);
+        p.position.z = t.at<float>(2);
+        p.orientation.x = q[0];
+        p.orientation.y = q[1];
+        p.orientation.z = q[2];
+        p.orientation.w = q[3];
+
+        mKeyFrameInfoMsg.Poses.push_back(p);
+    }
+
+
+    kf_publisher.publish(mKeyFrameInfoMsg);
+}
+
 
 void MapPublisher::PublishCurrentCamera(const cv::Mat &Tcw)
 {

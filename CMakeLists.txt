@@ -18,6 +18,7 @@ LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
+rosbuild_genmsg()
 
 include_directories(
 ${PROJECT_SOURCE_DIR}

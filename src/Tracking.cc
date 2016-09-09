@@ -35,7 +35,7 @@
 
 #include<iostream>
 #include<fstream>
-
+#include <csignal>
 
 using namespace std;
 
@@ -167,6 +167,7 @@ void Tracking::Run()
 
 void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 {
+    std::raise(SIGINT);
 
     cv::Mat im;
 
@@ -311,7 +312,8 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 
         tf::Transform tfTcw(M,V);
 
-        mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "ORB_SLAM/World", "ORB_SLAM/Camera"));
+        //mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "ORB_SLAM/World", "ORB_SLAM/Camera"));
+        mTfBr.sendTransform(tf::StampedTransform(tfTcw,msg->header.stamp, "ORB_SLAM/World", "ORB_SLAM/Camera"));
     }
 
 }
@@ -345,17 +347,21 @@ void Tracking::Initialize()
     {
         fill(mvIniMatches.begin(),mvIniMatches.end(),-1);
         mState = NOT_INITIALIZED;
+        std::cout<<"current frame has not enough keypoints:"<<mCurrentFrame.mvKeys.size()<<std::endl;
         return;
     }    
 
     // Find correspondences
     ORBmatcher matcher(0.9,true);
-    int nmatches = matcher.SearchForInitialization(mInitialFrame,mCurrentFrame,mvbPrevMatched,mvIniMatches,100);
+    int nmatches = matcher.SearchForInitialization(mInitialFrame,mCurrentFrame,mvbPrevMatched,mvIniMatches,200);
+    std::cout<<"correspondences:"<<nmatches;
 
     // Check if there are enough correspondences
     if(nmatches<100)
     {
         mState = NOT_INITIALIZED;
+        std::cout<<" - current frame has not enough correspondences:"<<std::endl;
+
         return;
     }  
 
@@ -665,6 +671,8 @@ bool Tracking::NeedNewKeyFrame()
 void Tracking::CreateNewKeyFrame()
 {
     KeyFrame* pKF = new KeyFrame(mCurrentFrame,mpMap,mpKeyFrameDB);
+
+    mpMapPublisher->PublishCurrentKeyFramePairs(mpReferenceKF,pKF);
 
     mpLocalMapper->InsertKeyFrame(pKF);
 

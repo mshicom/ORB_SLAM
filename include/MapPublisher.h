@@ -28,6 +28,7 @@
 #include"MapPoint.h"
 #include"KeyFrame.h"
 
+#include <orb_slam/KeyFrameInfo.h>
 namespace ORB_SLAM
 {
 
@@ -41,6 +42,7 @@ public:
     void Refresh();
     void PublishMapPoints(const std::vector<MapPoint*> &vpMPs, const std::vector<MapPoint*> &vpRefMPs);
     void PublishKeyFrames(const std::vector<KeyFrame*> &vpKFs);
+    void PublishCurrentKeyFramePairs(KeyFrame *ReferenceKF, KeyFrame *CurrentKF);
     void PublishCurrentCamera(const cv::Mat &Tcw);
     void SetCurrentCameraPose(const cv::Mat &Tcw);
 
@@ -52,6 +54,8 @@ private:
 
     ros::NodeHandle nh;
     ros::Publisher publisher;
+    ros::Publisher kf_publisher;
+    orb_slam::KeyFrameInfo mKeyFrameInfoMsg;
 
     visualization_msgs::Marker mPoints;
     visualization_msgs::Marker mReferencePoints;
