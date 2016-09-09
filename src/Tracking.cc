@@ -37,6 +37,7 @@
 #include<fstream>
 #include <csignal>
 
+#include <glog/logging.h>
 using namespace std;
 
 namespace ORB_SLAM
@@ -140,6 +141,8 @@ Tracking::Tracking(ORBVocabulary* pVoc, FramePublisher *pFramePublisher, MapPubl
     tf::Transform tfT;
     tfT.setIdentity();
     mTfBr.sendTransform(tf::StampedTransform(tfT,ros::Time::now(), "/ORB_SLAM/World", "/ORB_SLAM/Camera"));
+
+    LOG(INFO)<<"State: NO_IMAGES_YET";
 }
 
 void Tracking::SetLocalMapper(LocalMapping *pLocalMapper)
@@ -167,7 +170,8 @@ void Tracking::Run()
 
 void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 {
-    std::raise(SIGINT);
+    LOG(INFO)<<"Got new Image [SEQ:"<<msg->header.seq << ", TS:" <<msg->header.stamp <<"]";
+    //std::raise(SIGINT);
 
     cv::Mat im;
 
@@ -207,6 +211,7 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
     if(mState==NO_IMAGES_YET)
     {
         mState = NOT_INITIALIZED;
+        LOG(INFO)<<"State: NOT_INITIALIZED";
     }
 
     mLastProcessedState=mState;
@@ -264,11 +269,14 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
             }
         }
 
-        if(bOK)
+        if(bOK) {
+            LOG(INFO)<<"State: WORKING";
             mState = WORKING;
-        else
+        }
+        else {
+            LOG(INFO)<<"State: LOST";
             mState=LOST;
-
+        }
         // Reset if the camera get lost soon after initialization
         if(mState==LOST)
         {
@@ -337,6 +345,8 @@ void Tracking::FirstInitialization()
 
 
         mState = INITIALIZING;
+        LOG(INFO)<<"State: INITIALIZING";
+
     }
 }
 
@@ -347,20 +357,23 @@ void Tracking::Initialize()
     {
         fill(mvIniMatches.begin(),mvIniMatches.end(),-1);
         mState = NOT_INITIALIZED;
-        std::cout<<"current frame has not enough keypoints:"<<mCurrentFrame.mvKeys.size()<<std::endl;
+        LOG(INFO)<<"current frame has not enough keypoints:"<<mCurrentFrame.mvKeys.size()<<std::endl;
+        LOG(INFO)<<"State: NOT_INITIALIZED";
+
         return;
     }    
 
     // Find correspondences
-    ORBmatcher matcher(0.9,true);
-    int nmatches = matcher.SearchForInitialization(mInitialFrame,mCurrentFrame,mvbPrevMatched,mvIniMatches,200);
-    std::cout<<"correspondences:"<<nmatches;
+    ORBmatcher matcher(0.9, false); // checkOri=false for planar motion
+    int nmatches = matcher.SearchForInitialization(mInitialFrame,mCurrentFrame,mvbPrevMatched,mvIniMatches,100);
+    LOG(INFO)<<"get orb correspondences: "<<nmatches;
 
     // Check if there are enough correspondences
     if(nmatches<100)
     {
         mState = NOT_INITIALIZED;
-        std::cout<<" - current frame has not enough correspondences:"<<std::endl;
+        LOG(INFO)<<"current frame has not enough correspondences, skipped"<<std::endl;
+        LOG(INFO)<<"State: NOT_INITIALIZED";
 
         return;
     }  
@@ -382,6 +395,8 @@ void Tracking::Initialize()
 
         CreateInitialMap(Rcw,tcw);
     }
+    else
+        LOG(WARNING)<<"mpInitializer failed!";
 
 }
 

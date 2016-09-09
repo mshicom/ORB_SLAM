@@ -22,6 +22,7 @@
 #include "Converter.h"
 
 #include <ros/ros.h>
+#include <glog/logging.h>
 
 namespace ORB_SLAM
 {
@@ -60,6 +61,7 @@ Frame::Frame(cv::Mat &im_, const double &timeStamp, ORBextractor* extractor, ORB
     (*mpORBextractor)(im,cv::Mat(),mvKeys,mDescriptors);
 
     N = mvKeys.size();
+    LOG(INFO)<< "Exctracted "<< N <<" ORB feature.";
 
     if(mvKeys.empty())
         return;
