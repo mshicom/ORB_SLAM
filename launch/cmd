@@ -1,0 +1,11 @@
+
+
+rosparam set use_sim_time true
+rosbag play bumblebee_11170132.bag --pause --clock
+rosrun ORB_SLAM ORB_SLAM /camera/image_raw:=/stereo/11170132/left Data/ORBvoc.txt Data/bumblebee.yaml
+
+rosbag record /ORB_SLAM/KeyFrames /ORB_SLAM/Map /stereo/11170132/left /stereo/11170132/right /tf  -O orb_pos.bag
+
+
+
+

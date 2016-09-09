@@ -48,6 +48,7 @@ rosbuild_add_boost_directories()
 rosbuild_link_boost(${PROJECT_NAME} thread)
 
 target_link_libraries(${PROJECT_NAME}
+glog
 ${OpenCV_LIBS}
 ${EIGEN3_LIBS}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so

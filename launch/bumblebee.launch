@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+    <node name="orbslam" pkg="ORB_SLAM" type="ORB_SLAM" args="Data/ORBvoc.txt Data/ximea_setting.yaml" required="true" cwd="node" output="screen">
+        <remap from="/camera/image_raw" to="/stereo/11170132/left" />
+    </node>
+
+	<node name="result" pkg="rviz" type="rviz" required="false" args="-d $(find ORB_SLAM)/Data/rviz.rviz" />
+
+</launch>
