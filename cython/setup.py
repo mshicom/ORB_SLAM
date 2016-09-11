@@ -23,12 +23,13 @@ opencv_incs = [inc.partition("-I")[2]
 
 
 ext_modules = [
-    Extension("ORB_SLAM",
-              sources = ["ORBextractor.pyx"],
+    Extension("ORBExtractor",
+              sources = ["ORBExtractor.pyx", "../src/ORBextractor.cc"],
               language='c++',
               include_dirs = [ "../include",
                               numpy.get_include(),]
                               + opencv_incs,
+              libraries = [],
               extra_link_args = opencv_libs
 )]
 
