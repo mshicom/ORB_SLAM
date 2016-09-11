@@ -1,0 +1,4 @@
+~/rosmake_ws/sandbox/ORB_SLAM/bin$ ./ORB_SLAM /camera/image_raw:=/stereo/11170132/left  Data/ORBvoc.txt Data/bumblebee.yaml
+
+rosbag record /ORB_SLAM/KeyFrames /stereo/11170132/left /stereo/11170132/right -o orb.bag
+
