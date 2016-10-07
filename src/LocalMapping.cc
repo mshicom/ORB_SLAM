@@ -25,14 +25,39 @@
 
 #include <ros/ros.h>
 
+
 namespace ORB_SLAM
 {
 
 LocalMapping::LocalMapping(Map *pMap):
     mbResetRequested(false), mpMap(pMap),  mbAbortBA(false), mbStopped(false), mbStopRequested(false), mbAcceptKeyFrames(true)
 {
+    fs.open("keyframe_info.yml",cv::FileStorage::WRITE);
+    fs << "kfs" << "[";
 }
 
+LocalMapping::~LocalMapping()
+{
+    fs << "]";
+    fs.release();
+}
+
+void LocalMapping::DumpKeyFrameInfo(KeyFrame* pKF)
+{
+    fs << "{";
+        fs << "FrameId" << (int)pKF->mnFrameId;
+        fs << "TimeStamp"<< pKF->mTimeStamp;
+        fs << "Tcw"<< pKF->GetPose();
+
+        vector<KeyFrame*> vnbrKFs = pKF->GetBestCovisibilityKeyFrames(10);
+        fs << "Neighbor_cnt" << (int)vnbrKFs.size();
+        fs << "Neighbors" << "[";
+            for(KeyFrame* pnkf : vnbrKFs)
+                fs << "{" << "id" << (int)pnkf->mnId << "TimeStamp" << pnkf->mTimeStamp << "Tcw" << pnkf->GetPose() << "}";
+        fs << "]";
+
+    fs << "}";
+}
 void LocalMapping::SetLoopCloser(LoopClosing* pLoopCloser)
 {
     mpLoopCloser = pLoopCloser;
@@ -76,6 +101,9 @@ void LocalMapping::Run()
 
                 // Check redundant local Keyframes
                 KeyFrameCulling();
+
+                // dump info to file
+                DumpKeyFrameInfo(mpCurrentKeyFrame);
 
                 mpMap->SetFlagAfterBA();
 

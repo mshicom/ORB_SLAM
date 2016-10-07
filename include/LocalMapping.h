@@ -27,7 +27,7 @@
 #include "Tracking.h"
 #include <boost/thread.hpp>
 #include "KeyFrameDatabase.h"
-
+#include <opencv2/opencv.hpp>
 
 namespace ORB_SLAM
 {
@@ -40,7 +40,7 @@ class LocalMapping
 {
 public:
     LocalMapping(Map* pMap);
-
+    ~LocalMapping();
     void SetLoopCloser(LoopClosing* pLoopCloser);
 
     void SetTracker(Tracking* pTracker);
@@ -77,6 +77,8 @@ protected:
 
     void KeyFrameCulling();
 
+    void DumpKeyFrameInfo(KeyFrame* pKF);
+
     cv::Mat ComputeF12(KeyFrame* &pKF1, KeyFrame* &pKF2);
 
     cv::Mat SkewSymmetricMatrix(const cv::Mat &v);
@@ -106,6 +108,8 @@ protected:
 
     bool mbAcceptKeyFrames;
     boost::mutex mMutexAccept;
+
+    cv::FileStorage fs;
 };
 
 } //namespace ORB_SLAM
