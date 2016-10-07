@@ -42,21 +42,63 @@ LocalMapping::~LocalMapping()
     fs.release();
 }
 
+void write(cv::FileStorage& fs, const std::string& objname, KeyFrame* pKF)
+{
+    fs << "{"
+           << "id" << (int)pKF->mnId
+           << "FrameId" << (int)(pKF->mnFrameId)
+           << "TimeStamp"<< pKF->mTimeStamp
+           << "Tcw"<< pKF->GetPose()
+       << "}";
+}
+
 void LocalMapping::DumpKeyFrameInfo(KeyFrame* pKF)
 {
     fs << "{";
+        // info for this Keyframe
         fs << "FrameId" << (int)pKF->mnFrameId;
         fs << "TimeStamp"<< pKF->mTimeStamp;
         fs << "Tcw"<< pKF->GetPose();
 
+        // best neighboring Keyframes
         vector<KeyFrame*> vnbrKFs = pKF->GetBestCovisibilityKeyFrames(10);
-        fs << "Neighbor_cnt" << (int)vnbrKFs.size();
         fs << "Neighbors" << "[";
-            for(KeyFrame* pnkf : vnbrKFs)
+            for(KeyFrame* pnkf : vnbrKFs) {
                 fs << "{" << "id" << (int)pnkf->mnId << "TimeStamp" << pnkf->mTimeStamp << "Tcw" << pnkf->GetPose() << "}";
+            } fs << "]";
+
+        // 2D feature-points in this keyframe
+        vector<cv::KeyPoint> vKP2D = pKF->GetKeyPoints();
+        fs << "KeyPoints" << "[";
+        for(cv::KeyPoint &kp : vKP2D)
+            fs << kp.pt;
         fs << "]";
 
-    fs << "}";
+        // triangulated 3D map-points in this keyframe
+        vector<MapPoint*> vpMapPointMatches = pKF->GetMapPointMatches();
+        fs << "MapPoints" << "[";
+            for(MapPoint* pMP : vpMapPointMatches) {
+                if(pMP == NULL)
+                    continue;
+
+                if( pMP->isBad())
+                    continue;
+
+                cv::Vec3d pos3d = pMP->GetWorldPos();
+                fs << "{:"
+                   << "x" << pos3d(0) << "y"<< pos3d(1) << "z" << pos3d(2)
+                   << "fid" << "[:";
+                        for(KeyFrame* pnkf : vnbrKFs)
+                        {
+                            if (pMP->IsInKeyFrame(pnkf))
+                                fs << (int)pnkf->mnId;
+                        } fs << "]"; // fid
+                    fs << "}"; //
+
+            } fs << "]"; // MapPoints
+
+
+    fs << "}"; // DumpKeyFrameInfo
 }
 void LocalMapping::SetLoopCloser(LoopClosing* pLoopCloser)
 {
